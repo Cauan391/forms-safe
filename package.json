@@ -1,0 +1,13 @@
+{
+  "name": "safe-forms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Formulário de diagnóstico da Safe Group — HTML estático + Worker proxy que oculta o webhook externo.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

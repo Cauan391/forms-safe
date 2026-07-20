@@ -1,0 +1,22 @@
+# Logs
+*.log
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Segredos — NUNCA versionar (.env.local já cai em *.local, mas reforçamos)
+.env
+.env.*
+!.env.example
+
+# Cloudflare / Wrangler
+.wrangler
+.dev.vars
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store

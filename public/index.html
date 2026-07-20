@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forms Safe Group</title>
+<link rel="icon" type="image/png" href="tornado-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   SAFE FORMS — MVP v4 (tema CLARO)
+   Estrutura (G4): coluna única, header + progresso segmentado,
+     bloco "| Olá,", cascata com próxima pergunta esmaecida,
+     radios circulares com auto-avanço, botão travado até validar.
+   Linguagem visual (Safe / seções claras da landing):
+     fundo #ededed/#fff, texto #111, GRID arquitetônico de linhas
+     rgba(0,0,0,.15), tags mono #dcdcdc + vermelho, cantos RETOS,
+     botão #d94126. Fontes Inter + Space Mono.
+   ============================================================ */
+:root {
+  /* fundo: off-white com um toque quente do vermelho da marca (blush),
+     análogo a como o fundo do G4 deriva do azul deles */
+  --page: #f2ebe7;
+  --line: rgba(40,20,15,0.14);        /* grid arquitetônico (quente) */
+  --line-strong: rgba(40,20,15,0.28); /* borda de input */
+  --text: #1a1110;
+  --muted: #6a5b57;
+  --muted-2: rgba(26,17,16,0.5);
+  --accent: #1a1110;              /* monocromático — acentos em preto */
+  --brand: #e8402d;              /* vermelho da marca (só no logo) */
+  --btn: #1a1110;                /* botão PRETO */
+  --btn-hover: #000000;
+  --chip: rgba(26,17,16,0.06);
+  --accent-soft: rgba(26,17,16,0.07);
+  --font-sans: 'Manrope', -apple-system, sans-serif;  /* tipografia do G4 */
+  --font-mono: 'Manrope', -apple-system, sans-serif;  /* G4 usa só Manrope */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-sans);
+  background-color: var(--page);          /* off-white em TODA a página */
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+}
+::selection { background: var(--text); color: var(--page); }
+
+/* profundidade tonal (mesma cor, luzes/sombras neutras) — página inteira */
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(72% 52% at 50% -6%, rgba(255,250,247,0.7) 0%, transparent 58%),
+    radial-gradient(75% 60% at 106% 106%, rgba(40,20,15,0.05) 0%, transparent 55%),
+    radial-gradient(70% 55% at -6% 96%, rgba(40,20,15,0.045) 0%, transparent 55%);
+}
+/* textura de grão fina (papel) — dá vida ao tom, sem logo */
+body::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.32'/%3E%3C/svg%3E");
+}
+
+/* ============ COLUNA ÚNICA (mesma cor, sem moldura) ============ */
+.frame {
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+.pad { padding-left: 40px; padding-right: 40px; }
+
+/* header: logo + nome do form, com divisória inferior (Safe) */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 58px; padding-bottom: 12px;
+}
+.brand { font-weight: 800; font-size: 23px; letter-spacing: -0.03em; color: var(--text); }
+/* marca mobile (G4-style): tornado + "Safe Group" — só aparece abaixo de 640px */
+.brand-mobile { display: none; align-items: center; gap: 5px; flex-shrink: 0; }
+.brand-mobile img { width: 38px; height: 38px; display: block; }
+.brand-mobile span { font-weight: 800; font-size: 15.5px; letter-spacing: -0.02em; color: #fff; }
+.form-name {
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.form-name-desktop { font-size: 13px; color: var(--text); }
+.form-name-mobile { display: none; }
+/* grupo à direita do header: label + trocador de idioma */
+.topbar-right { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.lang-switch { position: relative; }
+.lang-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 30px; padding: 0 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255,252,250,0.6);
+  cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--text);
+  transition: border-color .15s, background .15s;
+}
+.lang-btn:hover { border-color: var(--text); }
+.lang-btn svg { width: 14px; height: 14px; display: block; opacity: .6; transition: opacity .15s; flex-shrink: 0; }
+.lang-btn:hover svg { opacity: 1; }
+.lang-btn .lang-slash { opacity: .45; }
+.lang-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.14);
+  padding: 5px; z-index: 50;
+}
+.lang-opt {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 9px 10px; border-radius: 6px;
+  font-family: var(--font-sans); font-size: 14px; color: var(--text);
+  text-align: left;
+}
+.lang-opt:hover { background: rgba(26,17,16,0.05); }
+.lang-opt.active { font-weight: 700; }
+.lang-opt .lang-code {
+  flex: 0 0 34px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .02em;
+  color: rgba(26,17,16,0.4); text-transform: uppercase; white-space: nowrap;
+}
+.lang-opt.active .lang-code { color: rgba(26,17,16,0.6); }
+/* progresso segmentado (G4) logo abaixo do header */
+.progress {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 3px;
+  padding-left: 40px; padding-right: 40px;
+}
+.progress i {
+  height: 2px;                       /* fino e comprido, igual o G4 */
+  background: rgba(0,0,0,0.12);
+  transition: background .4s var(--ease);
+}
+.progress i.done { background: var(--accent); }
+.progress i.now  { background: var(--text); }   /* sem piscar */
+
+/* corpo */
+.form-area { flex: 1; padding-top: 18px; padding-bottom: 28px; }
+
+/* bloco de título com barra lateral vermelha (G4 "| Olá,") */
+.section-head { margin-bottom: 4px; }
+.section-head h2 {
+  position: relative;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.22;
+  padding-left: 15px;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+/* trava menor (≈ tamanho do G4): fina e curta, alinhada ao texto */
+.section-head h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  height: 0.85em;
+  width: 2px;
+  background: var(--accent);
+}
+.section-head .section-sub {
+  font-size: 16.5px;           /* copy um pouco maior, como o G4 */
+  color: var(--text);          /* preto, como o G4 */
+  line-height: 1.5;
+  max-width: 540px;
+  margin-bottom: 18px;
+}
+
+/* voltar — agora inline, ao lado do Confirmar (embaixo) */
+.btn-back {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted);
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-sans); font-size: 13.5px; font-weight: 500;
+  padding: 11px 6px;
+  transition: color .2s;
+}
+.btn-back:hover { color: var(--text); }
+.btn-back svg { width: 15px; height: 15px; }
+
+/* ---------- CASCATA (G4): ativa + próxima esmaecida ---------- */
+.qlist { display: flex; flex-direction: column; gap: 40px; }
+.qitem.active { animation: qIn .5s var(--ease); }
+.qitem.leaving { animation: qOut .26s var(--ease) forwards; }
+.qitem.dim {
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+}
+@keyframes qIn  { from { opacity: 0; transform: translateY(22px); } }
+@keyframes qOut { to   { opacity: 0; transform: translateY(-18px); } }
+
+/* pergunta numerada inline (G4) */
+.qtitle {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 12px;
+  max-width: 560px;
+  color: var(--text);
+}
+.qtitle .qnum { font-family: var(--font-mono); color: var(--accent); margin-right: 8px; }
+.qtitle b { color: var(--brand); font-weight: 800; }   /* destaque real dentro da pergunta (já em bold) */
+
+/* input (fundo claro, cantos arredondados como o G4) */
+.field { position: relative; max-width: 560px; }
+input[type="text"], input[type="email"], input[type="tel"], textarea {
+  width: 100%;
+  background: rgba(255,252,250,0.55);   /* leve véu claro sobre a textura */
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;               /* arredondado (G4) */
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  padding: 14px 15px;
+  outline: none;
+  transition: border-color .22s, box-shadow .22s, background .22s;
+}
+textarea { resize: none; min-height: 110px; line-height: 1.55; }
+input::placeholder, textarea::placeholder { color: var(--muted-2); }
+input:focus, textarea:focus {
+  border-color: var(--text);
+  background: rgba(255,252,250,0.9);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+/* telefone com seletor de país (bandeira + DDI), como o G4 */
+.field.phone { display: flex; align-items: stretch; }
+.ddi-wrap { position: relative; display: flex; }
+.ddi {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line-strong);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  padding: 0 12px;
+  font-family: var(--font-sans); font-size: 14px;
+  color: var(--text);
+  background: rgba(26,17,16,0.04);
+  white-space: nowrap; cursor: pointer;
+  transition: background .15s;
+}
+.ddi:hover { background: rgba(26,17,16,0.07); }
+.flag { display: inline-flex; align-items: center; }
+.flag svg { display: block; width: 20px; height: 14px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.06); }
+.ddi .caret { width: 12px; height: 12px; opacity: 0.45; margin-left: 1px; }
+.field.phone input { border-radius: 0 8px 8px 0; }
+/* menu de países */
+.ddi-menu {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.14);
+  padding: 5px; z-index: 40;
+}
+.ddi-opt {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 9px 10px; border-radius: 6px;
+  font-family: var(--font-sans); font-size: 14px; color: var(--text);
+  text-align: left;
+}
+.ddi-opt:hover { background: rgba(26,17,16,0.05); }
+.ddi-opt .opt-code { margin-left: auto; color: var(--muted); font-size: 13px; }
+.hint {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted-2);
+  margin-top: 8px;
+}
+.error-msg {
+  font-size: 13px; color: var(--accent);
+  margin-top: 8px; min-height: 17px; font-weight: 500;
+}
+
+/* ---------- radios circulares com auto-avanço (G4) ---------- */
+.radios { display: flex; flex-direction: column; gap: 2px; max-width: 560px; }
+.radio-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 12px;
+  margin-left: -12px;
+  border-radius: 8px;               /* arredondado (G4) */
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text);
+  transition: background .15s;
+  user-select: none;
+}
+.radio-row:hover { background: rgba(0,0,0,0.035); }
+.radio-row .circle {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(0,0,0,0.35);
+  border-radius: 50%;
+  flex: 0 0 20px;
+  display: grid; place-items: center;
+  transition: border-color .15s;
+}
+.radio-row .circle::after {
+  content: "";
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: scale(0);
+  transition: transform .18s var(--ease);
+}
+.radio-row:hover .circle { border-color: var(--text); }
+.radio-row.picked .circle { border-color: var(--accent); }
+.radio-row.picked .circle::after { transform: scale(1); }
+.radio-row.picked { background: var(--accent-soft); }
+
+/* ---------- botão (Safe: reto, mono, uppercase) ---------- */
+.actions { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
+.cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  background: var(--btn);
+  color: #fff;
+  border: none; cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 13.5px; font-weight: 500;
+  letter-spacing: 0.3px;            /* sem caixa-alta — só o C maiúsculo */
+  min-width: 130px; min-height: 44px;
+  padding: 11px 20px;
+  border-radius: 8px;               /* arredondado (G4) */
+  transition: background .2s, transform .15s;
+}
+.cta:hover:not(:disabled) { background: var(--btn-hover); transform: translateY(-1px); }
+.cta:active:not(:disabled) { transform: translateY(0); }
+.cta:disabled { background: rgba(26,17,16,0.13); color: rgba(26,17,16,0.42); cursor: not-allowed; }
+.cta svg { width: 15px; height: 15px; }
+.enter-hint {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted-2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.enter-hint b { color: var(--muted); font-weight: 400; }
+
+/* rodapé legal */
+.legal {
+  padding-top: 16px;
+  padding-bottom: 22px;
+  font-size: 11.5px;
+  color: var(--muted-2);
+  text-align: center;
+}
+.legal a { color: var(--muted); text-decoration: underline; }
+
+/* ============ TELA FINAL DE CONFIRMAÇÃO ============ */
+.success { display: none; }
+.success.show { display: block; animation: qIn .6s var(--ease); }
+.success-check {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: var(--text);
+  display: grid; place-items: center;
+  margin-bottom: 22px;
+  animation: checkPop .5s var(--ease) both;
+}
+.success-check svg { width: 26px; height: 26px; color: var(--page); }
+@keyframes checkPop { from { transform: scale(.5); opacity: 0; } }
+.success .s-tag {
+  font-size: 11.5px;
+  letter-spacing: 1.5px; color: var(--muted);
+  text-transform: uppercase; font-weight: 700;
+  margin-bottom: 12px;
+}
+.success h2 {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 800; letter-spacing: -0.03em;
+  line-height: 1.22; margin-bottom: 14px;
+  color: var(--text);
+}
+.success .s-sub { color: var(--muted); font-size: 16.5px; line-height: 1.5; margin-bottom: 22px; max-width: 520px; }
+.success .s-sub b { color: var(--text); font-weight: 700; }
+
+/* eco do contato informado */
+.s-contact {
+  background: rgba(255,252,250,0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 560px;
+  margin-bottom: 30px;
+}
+.s-contact b { color: var(--text); }
+
+/* bloco "pular a fila" */
+.s-cta-block { margin-bottom: 36px; }
+.s-cta-ask {
+  font-size: 14px; font-weight: 800;
+  color: var(--brand);                /* toque de vida no vermelho da marca */
+  margin-bottom: 10px;
+}
+.cta-wa { text-decoration: none; padding: 13px 26px; gap: 11px; font-size: 14px; }
+.cta-wa svg { width: 19px; height: 19px; }
+.s-cta-micro { font-size: 12px; color: var(--muted-2); margin-top: 9px; }
+
+/* divisores e rótulos de seção */
+.s-div { border: none; border-top: 1px solid var(--line); margin: 0 0 30px; max-width: 620px; }
+.s-label {
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.s-section { margin-bottom: 34px; max-width: 620px; }
+
+/* checklist do que o lead recebe */
+.s-checklist { list-style: none; display: flex; flex-direction: column; gap: 13px; margin-bottom: 0; }
+.s-checklist li { display: flex; gap: 12px; font-size: 15px; line-height: 1.5; color: var(--text); }
+.s-checklist i { font-style: normal; color: var(--muted); }
+.s-check {
+  flex: 0 0 20px; width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #1a9c5c;
+  display: grid; place-items: center;
+  margin-top: 2px;
+}
+.s-check svg { width: 11px; height: 11px; color: #fff; }
+
+/* assinatura final */
+.s-signoff { font-size: 14.5px; color: var(--muted); }
+.s-signoff b { color: var(--text); }
+.timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-left: 1px solid var(--line); }
+.tl-item { border-top: 2px solid rgba(0,0,0,0.14); border-right: 1px solid var(--line); padding: 16px 16px 30px; }
+.tl-item:first-child { border-top-color: var(--accent); }
+.tl-item .tl-num {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--accent); margin-bottom: 8px; display: block; font-weight: 700;
+}
+.tl-item h4 { font-size: 13.5px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+.tl-item p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* ============ MOBILE ============ */
+@media (max-width: 640px) {
+  .pad { padding-left: 22px; padding-right: 22px; }
+
+  /* header fixo preto (G4): fica pinado no topo, corpo texturizado rola por baixo */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 30;
+    background: #000;
+    padding-top: 16px; padding-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  }
+  /* no mobile: tornado + "Safe Group" no lugar do wordmark "safe/" */
+  .brand { display: none; }
+  .brand-mobile { display: flex; }
+  .form-name-desktop { display: none; }
+  .form-name-mobile { display: block; font-size: 11.5px; color: #fff; text-transform: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* só D e G maiúsculos, como digitado */
+  .topbar-right { gap: 10px; }
+  .lang-btn { flex-shrink: 0; height: 26px; padding: 0 10px; font-size: 10px; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.35); color: #fff; }
+  .lang-btn:hover { border-color: #fff; }
+
+  /* barra de progresso some no mobile, igual o G4 */
+  .progress { display: none; }
+
+  /* compensa o header fixo (não some do fluxo do jeito position:fixed exige) */
+  .form-area { padding-top: 100px; padding-bottom: 20px; }
+
+  /* fontes e espaçamentos maiores/mais soltos no mobile (referência: G4 mobile) */
+  .section-head h2 { font-size: 23px; margin-bottom: 20px; }
+  .section-head .section-sub { font-size: 15.5px; margin-bottom: 24px; }
+  .qtitle { margin-bottom: 16px; }
+  .actions { margin-top: 20px; }
+
+  .timeline { grid-template-columns: 1fr 1fr; border-left: none; }
+  .tl-item:nth-child(odd) { border-left: 1px solid var(--line); }
+  .cta-wa { width: 100%; }
+  .success h2 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <div class="topbar pad">
+    <div class="brand">Safe Group</div>
+    <div class="brand-mobile">
+      <img src="tornado-logo.png" alt="Safe Group">
+      <span>Safe Group</span>
+    </div>
+    <div class="topbar-right">
+      <div class="form-name form-name-desktop" id="formNameDesktop">Safe Diagnóstico</div>
+      <div class="form-name form-name-mobile" id="formNameMobile">Diagnóstico Gratuito</div>
+      <div class="lang-switch">
+        <button type="button" class="lang-btn" id="langBtn" aria-label="Idioma">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m5 8 6 6"/>
+            <path d="m4 14 6-6 2-3"/>
+            <path d="M2 5h12"/>
+            <path d="M7 2h1"/>
+            <path d="m22 22-5-10-5 10"/>
+            <path d="M14 18h6"/>
+          </svg>
+          <span id="langCode">BR</span><span class="lang-slash"> /</span>
+        </button>
+        <div class="lang-menu" id="langMenu" hidden></div>
+      </div>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+
+  <div class="form-area pad">
+
+    <div class="section-head" id="sectionHead">
+      <h2 id="headTitle">Olá,</h2>
+      <p class="section-sub" id="headSub">Precisamos de algumas informações para desenhar o diagnóstico ideal para o seu momento.</p>
+    </div>
+
+    <div class="qlist" id="qlist"></div>
+
+    <!-- tela final de confirmação -->
+    <div class="success" id="successView">
+
+      <div class="success-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <div class="s-tag" id="sTag"></div>
+      <h2 id="successTitle"></h2>
+      <p class="s-sub" id="successSub"></p>
+
+      <!-- confirmação do contato com eco dos dados -->
+      <div class="s-contact" id="sContact"></div>
+
+      <!-- pular a fila -->
+      <div class="s-cta-block">
+        <p class="s-cta-ask" id="sCtaAsk"></p>
+        <a class="cta cta-wa" id="sCtaLink" href="https://wa.me/5527999584889" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.3c-.2.6-1.2 1.1-1.7 1.2-.4 0-.9.2-3.1-.6-2.6-1-4.3-3.7-4.4-3.9-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.4.6c-.1.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.6.4 0 .1 0 .7-.2 1.2Z"/></svg>
+          <span id="sCtaBtnText"></span>
+        </a>
+        <p class="s-cta-micro" id="sCtaMicro"></p>
+      </div>
+
+      <hr class="s-div">
+
+      <!-- o que o lead recebe -->
+      <div class="s-section">
+        <p class="s-label" id="sChecklistLabel"></p>
+        <ul class="s-checklist" id="sChecklist"></ul>
+      </div>
+
+      <hr class="s-div">
+
+      <!-- o que acontece agora -->
+      <div class="s-section">
+        <p class="s-label" id="sTimelineLabel"></p>
+        <div class="timeline" id="sTimeline"></div>
+      </div>
+
+      <p class="s-signoff" id="sSignoff"></p>
+
+    </div>
+
+  </div>
+
+  <div class="legal pad">
+    © Safe 2026
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   Bandeiras (SVG, não emoji — Windows não renderiza emoji de bandeira)
+   Reaproveitadas tanto no seletor de DDI quanto no de idioma.
+   ============================================================ */
+const FLAGS = {
+  br: '<svg viewBox="0 0 20 14"><rect width="20" height="14" rx="2.5" fill="#009B3A"/><path d="M10 2.2 17.6 7 10 11.8 2.4 7Z" fill="#FEDF00"/><circle cx="10" cy="7" r="2.5" fill="#002776"/></svg>',
+  es: '<svg viewBox="0 0 20 14"><rect width="20" height="14" rx="2.5" fill="#C60B1E"/><rect y="3.5" width="20" height="7" fill="#FFC400"/></svg>',
+  us: '<svg viewBox="0 0 20 14"><rect width="20" height="14" rx="2.5" fill="#fff"/><rect y="0" width="20" height="2" fill="#B22234"/><rect y="4" width="20" height="2" fill="#B22234"/><rect y="8" width="20" height="2" fill="#B22234"/><rect y="12" width="20" height="2" fill="#B22234"/><rect width="9" height="8" fill="#3C3B6E"/></svg>',
+  pt: '<svg viewBox="0 0 20 14"><rect width="20" height="14" rx="2.5" fill="#DA291C"/><rect width="8" height="14" rx="2.5" fill="#046A38"/><circle cx="8" cy="7" r="2" fill="#FFE900" stroke="#fff" stroke-width="0.6"/></svg>'
+};
+
+/* número da Safe que recebe o "falar com um estrategista agora" (tela final) */
+const SALES_WHATSAPP = '5527999584889';
+
+/* países disponíveis no seletor de WhatsApp (bandeira + DDI) */
+const COUNTRIES = [
+  { code: '+55',  name: 'Brasil',   flag: FLAGS.br },
+  { code: '+34',  name: 'Espanha',  flag: FLAGS.es },
+  { code: '+1',   name: 'EUA',      flag: FLAGS.us },
+  { code: '+351', name: 'Portugal', flag: FLAGS.pt }
+];
+let selectedDDI = COUNTRIES[0];
+
+const first = (n) => (n || '').trim().split(/\s+/)[0] || '';
+
+/* ============================================================
+   I18N — cada idioma tem sua própria copy, adaptada ao contexto
+   do país (não é tradução literal). Mesmas 4 opções do seletor
+   de telefone: Brasil, Espanha (ES), EUA (EN), Portugal (PT-PT).
+   ============================================================ */
+const LANGUAGES = [
+  { code: 'pt-BR', short: 'PT-BR', btn: 'BR', label: 'Português (Brasil)' },
+  { code: 'pt-PT', short: 'PT-PT', btn: 'PT', label: 'Português (Portugal)' },
+  { code: 'es',    short: 'ES',    btn: 'ES', label: 'Español' },
+  { code: 'en',    short: 'EN',    btn: 'EN', label: 'English' }
+];
+
+const I18N = {
+
+  /* ---------------- PT-BR ---------------- */
+  'pt-BR': {
+    pageTitle: 'Forms Safe Group',
+    langAria: 'Idioma',
+    formNameDesktop: 'Safe Diagnóstico',
+    formNameMobile: 'Diagnóstico Gratuito',
+    back: 'Voltar',
+    confirm: 'Confirmar',
+    steps: [
+      { id: 'nome', type: 'text', placeholder: 'Digite seu nome e sobrenome',
+        question: () => 'Qual o seu nome completo?',
+        validate: v => v.trim().length >= 3 || 'Digite pelo menos seu primeiro nome.' },
+      { id: 'instagram', type: 'text', placeholder: '@suaempresa',
+        question: () => 'e qual o perfil da empresa no Instagram?',
+        validate: v => v.replace('@','').trim().length >= 2 || 'Digite o @ do perfil da empresa.' },
+      { id: 'email', type: 'email', placeholder: 'seunome@empresa.com.br',
+        question: d => `e o seu e-mail profissional${d.nome ? ', ' + first(d.nome) : ''}?`,
+        validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) || 'Hmm, esse e-mail não parece válido.' },
+      { id: 'whatsapp', type: 'tel', placeholder: '(11) 9 8765-4321',
+        question: () => 'e o seu WhatsApp?',
+        validate: v => v.replace(/\D/g,'').length >= 8 || 'Digite um número válido.',
+        hint: 'Número com DDD / código de área' },
+      { id: 'cargo', type: 'choice', question: () => 'Qual o seu cargo na empresa?',
+        options: ['Sócio ou Fundador', 'CEO ou Presidente', 'Diretor', 'Gerente ou Coordenador', 'Analista ou Outro'] },
+      { id: 'funcionarios', type: 'choice', question: () => 'Quantos funcionários a empresa tem hoje?',
+        options: ['Só eu', 'De 2 a 5', 'De 6 a 20', 'De 21 a 50', 'Mais de 50'] },
+      { id: 'prioridade', type: 'choice',
+        question: () => 'Você está aqui porque quer escalar sua operação com marketing inteligente + IA para growth. Isso é prioridade sua <b>hoje</b>?',
+        options: ['Sim', 'Não'] }
+    ],
+    headings: [
+      { at: 0, title: () => 'Olá,', sub: () => 'Precisamos de algumas informações para desenhar o diagnóstico ideal para o seu momento.' },
+      { at: 1, title: d => `Obrigado pelo seu interesse${d.nome ? ', ' + first(d.nome) : ''}.`, sub: () => 'Para priorizar o seu diagnóstico, preencha as informações a seguir.' },
+      { at: 4, title: () => 'Agora, sobre a sua operação...', sub: () => 'Essas respostas ajudam o estrategista a entender o seu momento.' },
+      { at: 6, title: () => 'Só mais uma coisa.', sub: () => 'Sua resposta ajuda a gente a priorizar o seu atendimento.' }
+    ],
+    success: {
+      tag: 'Diagnóstico confirmado',
+      title: 'Pré-inscrição confirmada com sucesso',
+      sub: h => h ? `O perfil ${h} acabou de dar o primeiro passo para destravar o crescimento.` : 'Você acabou de dar o primeiro passo para destravar o crescimento da sua empresa.',
+      contact: fone => `Um estrategista da Safe chama você em até <b>12h úteis</b> no número <b>${fone}</b>.`,
+      contactFallback: 'que você informou',
+      checklistFallback: 'o seu negócio',
+      ctaAsk: 'Não quer esperar?',
+      ctaBtn: 'Falar com um estrategista agora',
+      ctaMicro: 'use o botão para pular a fila de atendimento',
+      waMessage: h => `Olá! Acabei de preencher o diagnóstico da Safe${h ? ', aqui é ' + h : ''} e gostaria de falar agora.`,
+      checklistLabel: 'O que você recebe no diagnóstico',
+      checklist: [
+        { b: 'Raio-x do seu funil', i: () => '(onde os leads estão se perdendo hoje)' },
+        { b: 'Mapa de alavancas', i: h => `(as 3 frentes de maior impacto para ${h})` },
+        { b: 'Benchmark do seu setor', i: () => '(como você se compara a quem está na frente)' },
+        { b: 'Direcionamento estratégico', i: () => '(os primeiros passos para sair do lugar)' }
+      ],
+      timelineLabel: 'O que acontece agora',
+      timeline: [
+        { n: '01/', h: 'Solicitação recebida', p: 'Seus dados chegaram ao nosso time agora.' },
+        { n: '02/', h: 'Contato do estrategista', p: 'Ligação ou WhatsApp em até 12h úteis.' },
+        { n: '03/', h: 'Diagnóstico gratuito', p: 'Análise do seu funil e das suas alavancas.' },
+        { n: '04/', h: 'Plano de aceleração', p: 'Estratégia desenhada para o seu momento.' }
+      ],
+      signoff: 'Fique de olho no <b>WhatsApp</b> e no <b>e-mail</b> — Equipe Safe'
+    }
+  },
+
+  /* ---------------- PT-PT ---------------- */
+  'pt-PT': {
+    pageTitle: 'Forms Safe Group',
+    langAria: 'Idioma',
+    formNameDesktop: 'Diagnóstico Safe',
+    formNameMobile: 'Diagnóstico Gratuito',
+    back: 'Voltar',
+    confirm: 'Confirmar',
+    steps: [
+      { id: 'nome', type: 'text', placeholder: 'Indique o seu nome e apelido',
+        question: () => 'Qual é o seu nome completo?',
+        validate: v => v.trim().length >= 3 || 'Indique pelo menos o seu primeiro nome.' },
+      { id: 'instagram', type: 'text', placeholder: '@suaempresa',
+        question: () => 'e qual é o perfil da empresa no Instagram?',
+        validate: v => v.replace('@','').trim().length >= 2 || 'Indique o @ do perfil da empresa.' },
+      { id: 'email', type: 'email', placeholder: 'onome@empresa.pt',
+        question: d => `e o seu e-mail profissional${d.nome ? ', ' + first(d.nome) : ''}?`,
+        validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) || 'Este e-mail não parece válido.' },
+      { id: 'whatsapp', type: 'tel', placeholder: '912 345 678',
+        question: () => 'e o seu WhatsApp?',
+        validate: v => v.replace(/\D/g,'').length >= 8 || 'Indique um número válido.',
+        hint: 'Número com indicativo do país' },
+      { id: 'cargo', type: 'choice', question: () => 'Qual é o seu cargo na empresa?',
+        options: ['Sócio ou Fundador', 'CEO ou Presidente', 'Diretor', 'Gestor ou Coordenador', 'Analista ou Outro'] },
+      { id: 'funcionarios', type: 'choice', question: () => 'Quantos colaboradores tem a empresa atualmente?',
+        options: ['Só eu', 'De 2 a 5', 'De 6 a 20', 'De 21 a 50', 'Mais de 50'] },
+      { id: 'prioridade', type: 'choice',
+        question: () => 'Está aqui porque quer escalar a sua operação com marketing inteligente + IA para growth. Isso é uma prioridade sua <b>hoje</b>?',
+        options: ['Sim', 'Não'] }
+    ],
+    headings: [
+      { at: 0, title: () => 'Olá,', sub: () => 'Precisamos de algumas informações para desenhar o diagnóstico ideal para o seu momento.' },
+      { at: 1, title: d => `Obrigado pelo seu interesse${d.nome ? ', ' + first(d.nome) : ''}.`, sub: () => 'Para priorizar o seu diagnóstico, preencha os dados a seguir.' },
+      { at: 4, title: () => 'Agora, sobre a sua operação...', sub: () => 'Estas respostas ajudam o estratega a perceber o seu momento.' },
+      { at: 6, title: () => 'Só mais uma coisa.', sub: () => 'A sua resposta ajuda-nos a priorizar o seu atendimento.' }
+    ],
+    success: {
+      tag: 'Diagnóstico confirmado',
+      title: 'Pré-inscrição confirmada com sucesso',
+      sub: h => h ? `O perfil ${h} acabou de dar o primeiro passo para destravar o crescimento.` : 'Acabou de dar o primeiro passo para destravar o crescimento da sua empresa.',
+      contact: fone => `Um estratega da Safe contacta-o em até <b>12h úteis</b> através do número <b>${fone}</b>.`,
+      contactFallback: 'que indicou',
+      checklistFallback: 'o seu negócio',
+      ctaAsk: 'Não quer esperar?',
+      ctaBtn: 'Falar com um estratega agora',
+      ctaMicro: 'use o botão para saltar a fila de atendimento',
+      waMessage: h => `Olá! Acabei de preencher o diagnóstico da Safe${h ? ', aqui é ' + h : ''} e gostava de falar já.`,
+      checklistLabel: 'O que recebe no diagnóstico',
+      checklist: [
+        { b: 'Raio-x do seu funil', i: () => '(onde os leads se estão a perder hoje)' },
+        { b: 'Mapa de alavancas', i: h => `(as 3 frentes de maior impacto para ${h})` },
+        { b: 'Benchmark do seu setor', i: () => '(como se compara a quem está à frente)' },
+        { b: 'Direcionamento estratégico', i: () => '(os primeiros passos para sair do lugar)' }
+      ],
+      timelineLabel: 'O que acontece agora',
+      timeline: [
+        { n: '01/', h: 'Pedido recebido', p: 'Os seus dados chegaram agora à nossa equipa.' },
+        { n: '02/', h: 'Contacto do estratega', p: 'Chamada ou WhatsApp em até 12h úteis.' },
+        { n: '03/', h: 'Diagnóstico gratuito', p: 'Análise do seu funil e das suas alavancas.' },
+        { n: '04/', h: 'Plano de aceleração', p: 'Estratégia desenhada para o seu momento.' }
+      ],
+      signoff: 'Fique atento ao <b>WhatsApp</b> e ao <b>e-mail</b> — Equipa Safe'
+    }
+  },
+
+  /* ---------------- ES (Espanha) ---------------- */
+  'es': {
+    pageTitle: 'Forms Safe Group',
+    langAria: 'Idioma',
+    formNameDesktop: 'Diagnóstico Safe',
+    formNameMobile: 'Diagnóstico Gratis',
+    back: 'Atrás',
+    confirm: 'Confirmar',
+    steps: [
+      { id: 'nome', type: 'text', placeholder: 'Escribe tu nombre y apellidos',
+        question: () => '¿Cuál es tu nombre completo?',
+        validate: v => v.trim().length >= 3 || 'Escribe al menos tu primer nombre.' },
+      { id: 'instagram', type: 'text', placeholder: '@tuempresa',
+        question: () => '¿Cuál es el perfil de Instagram de la empresa?',
+        validate: v => v.replace('@','').trim().length >= 2 || 'Escribe el @ del perfil de la empresa.' },
+      { id: 'email', type: 'email', placeholder: 'tunombre@empresa.com',
+        question: d => `¿Cuál es tu email profesional${d.nome ? ', ' + first(d.nome) : ''}?`,
+        validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) || 'Ese email no parece válido.' },
+      { id: 'whatsapp', type: 'tel', placeholder: '612 345 678',
+        question: () => '¿Cuál es tu WhatsApp?',
+        validate: v => v.replace(/\D/g,'').length >= 8 || 'Escribe un número válido.',
+        hint: 'Número con prefijo de país' },
+      { id: 'cargo', type: 'choice', question: () => '¿Cuál es tu cargo en la empresa?',
+        options: ['Socio o Fundador', 'CEO o Presidente', 'Director', 'Gerente o Coordinador', 'Analista u Otro'] },
+      { id: 'funcionarios', type: 'choice', question: () => '¿Cuántos empleados tiene la empresa hoy?',
+        options: ['Solo yo', 'De 2 a 5', 'De 6 a 20', 'De 21 a 50', 'Más de 50'] },
+      { id: 'prioridade', type: 'choice',
+        question: () => 'Estás aquí porque quieres escalar tu operación con marketing inteligente + IA para growth. ¿Es una prioridad para ti <b>hoy</b>?',
+        options: ['Sí', 'No'] }
+    ],
+    headings: [
+      { at: 0, title: () => 'Hola,', sub: () => 'Necesitamos algo de información para diseñar el diagnóstico ideal para tu momento.' },
+      { at: 1, title: d => `Gracias por tu interés${d.nome ? ', ' + first(d.nome) : ''}.`, sub: () => 'Para priorizar tu diagnóstico, completa la información a continuación.' },
+      { at: 4, title: () => 'Ahora, sobre tu operación...', sub: () => 'Estas respuestas ayudan al estratega a entender tu momento.' },
+      { at: 6, title: () => 'Solo una cosa más.', sub: () => 'Tu respuesta nos ayuda a priorizar tu atención.' }
+    ],
+    success: {
+      tag: 'Diagnóstico confirmado',
+      title: 'Preinscripción confirmada con éxito',
+      sub: h => h ? `El perfil ${h} acaba de dar el primer paso para desbloquear el crecimiento.` : 'Acabas de dar el primer paso para desbloquear el crecimiento de tu empresa.',
+      contact: fone => `Un estratega de Safe te contactará en menos de <b>12h hábiles</b> al número <b>${fone}</b>.`,
+      contactFallback: 'que indicaste',
+      checklistFallback: 'tu negocio',
+      ctaAsk: '¿No quieres esperar?',
+      ctaBtn: 'Hablar con un estratega ahora',
+      ctaMicro: 'usa el botón para saltarte la fila de atención',
+      waMessage: h => `¡Hola! Acabo de rellenar el diagnóstico de Safe${h ? ', soy ' + h : ''} y me gustaría hablar ahora.`,
+      checklistLabel: 'Lo que recibes en el diagnóstico',
+      checklist: [
+        { b: 'Radiografía de tu funnel', i: () => '(dónde se están perdiendo los leads hoy)' },
+        { b: 'Mapa de palancas', i: h => `(los 3 frentes de mayor impacto para ${h})` },
+        { b: 'Benchmark de tu sector', i: () => '(cómo te comparas con quienes van por delante)' },
+        { b: 'Hoja de ruta estratégica', i: () => '(los primeros pasos para arrancar)' }
+      ],
+      timelineLabel: 'Qué pasa ahora',
+      timeline: [
+        { n: '01/', h: 'Solicitud recibida', p: 'Tus datos ya llegaron a nuestro equipo.' },
+        { n: '02/', h: 'Contacto del estratega', p: 'Llamada o WhatsApp en menos de 12h hábiles.' },
+        { n: '03/', h: 'Diagnóstico gratuito', p: 'Análisis de tu funnel y tus palancas de crecimiento.' },
+        { n: '04/', h: 'Plan de aceleración', p: 'Estrategia diseñada para tu momento.' }
+      ],
+      signoff: 'Mantente atento a tu <b>WhatsApp</b> y <b>correo</b> — Equipo Safe'
+    }
+  },
+
+  /* ---------------- EN (EUA) ---------------- */
+  'en': {
+    pageTitle: 'Forms Safe Group',
+    langAria: 'Language',
+    formNameDesktop: 'Safe Diagnostic',
+    formNameMobile: 'Free Diagnostic',
+    back: 'Back',
+    confirm: 'Confirm',
+    steps: [
+      { id: 'nome', type: 'text', placeholder: 'Enter your first and last name',
+        question: () => "What's your full name?",
+        validate: v => v.trim().length >= 3 || 'Please enter at least your first name.' },
+      { id: 'instagram', type: 'text', placeholder: '@yourcompany',
+        question: () => "What's your company's Instagram handle?",
+        validate: v => v.replace('@','').trim().length >= 2 || "Enter your company's @handle." },
+      { id: 'email', type: 'email', placeholder: 'you@company.com',
+        question: d => `What's the best email to reach you${d.nome ? ', ' + first(d.nome) : ''}?`,
+        validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) || "Hmm, that email doesn't look valid." },
+      { id: 'whatsapp', type: 'tel', placeholder: '(555) 123-4567',
+        question: () => "What's your WhatsApp number?",
+        validate: v => v.replace(/\D/g,'').length >= 8 || 'Enter a valid number.',
+        hint: 'Include your area code' },
+      { id: 'cargo', type: 'choice', question: () => "What's your role at the company?",
+        options: ['Owner or Founder', 'CEO or President', 'Director', 'Manager or Coordinator', 'Analyst or Other'] },
+      { id: 'funcionarios', type: 'choice', question: () => 'How many employees does the company have today?',
+        options: ['Just me', '2 to 5', '6 to 20', '21 to 50', 'More than 50'] },
+      { id: 'prioridade', type: 'choice',
+        question: () => "You're here because you want to scale your operation with intelligent marketing + AI for growth. Is that a priority for you <b>today</b>?",
+        options: ['Yes', 'No'] }
+    ],
+    headings: [
+      { at: 0, title: () => 'Hi,', sub: () => 'We need a bit of information to design the right diagnostic for where you are right now.' },
+      { at: 1, title: d => `Thanks for your interest${d.nome ? ', ' + first(d.nome) : ''}.`, sub: () => 'To prioritize your diagnostic, fill in the details below.' },
+      { at: 4, title: () => 'Now, about your operation...', sub: () => "These answers help the strategist understand where you're at." },
+      { at: 6, title: () => 'Just one more thing.', sub: () => 'Your answer helps us prioritize your service.' }
+    ],
+    success: {
+      tag: 'Diagnostic confirmed',
+      title: 'Pre-registration confirmed',
+      sub: h => h ? `${h} just took the first step to unlock growth.` : "You just took the first step to unlock your company's growth.",
+      contact: fone => `A Safe strategist will reach out within <b>12 business hours</b> at <b>${fone}</b>.`,
+      contactFallback: 'you provided',
+      checklistFallback: 'your business',
+      ctaAsk: "Don't want to wait?",
+      ctaBtn: 'Talk to a strategist now',
+      ctaMicro: 'use the button to skip the line',
+      waMessage: h => `Hi! I just filled out the Safe diagnostic${h ? ' — this is ' + h : ''} and I'd like to talk now.`,
+      checklistLabel: 'What you get in the diagnostic',
+      checklist: [
+        { b: 'X-ray of your funnel', i: () => '(where leads are dropping off today)' },
+        { b: 'Growth lever map', i: h => `(the 3 highest-impact areas for ${h})` },
+        { b: 'Industry benchmark', i: () => '(how you stack up against the ones ahead)' },
+        { b: 'Strategic direction', i: () => '(the first steps to get unstuck)' }
+      ],
+      timelineLabel: 'What happens now',
+      timeline: [
+        { n: '01/', h: 'Request received', p: 'Your info just landed with our team.' },
+        { n: '02/', h: 'Strategist outreach', p: 'A call or WhatsApp within 12 business hours.' },
+        { n: '03/', h: 'Free diagnostic', p: 'A look at your funnel and growth levers.' },
+        { n: '04/', h: 'Acceleration plan', p: "A strategy built for where you're at." }
+      ],
+      signoff: 'Keep an eye on your <b>WhatsApp</b> and <b>email</b> — Team Safe'
+    }
+  }
+};
+
+let currentLang = 'pt-BR';
+let STEPS = I18N[currentLang].steps;
+let HEADINGS = I18N[currentLang].headings;
+
+/* ============ estado ============ */
+const data = {};
+let cur = 0;
+
+/* ============ refs ============ */
+const qlist   = document.getElementById('qlist');
+const prog    = document.getElementById('progress');
+const headTitle = document.getElementById('headTitle');
+const headSub   = document.getElementById('headSub');
+const successView = document.getElementById('successView');
+const sectionHead = document.getElementById('sectionHead');
+const langBtn  = document.getElementById('langBtn');
+const langMenu = document.getElementById('langMenu');
+
+/* progresso segmentado (G4) — mesma quantidade de etapas em todos os idiomas */
+STEPS.forEach(() => prog.appendChild(document.createElement('i')));
+function paintProgress(done) {
+  [...prog.children].forEach((seg, i) => {
+    seg.className = done ? 'done' : (i < cur ? 'done' : (i === cur ? 'now' : ''));
+  });
+}
+
+/* cabeçalho de seção (G4) */
+function paintHead() {
+  const h = [...HEADINGS].reverse().find(h => cur >= h.at);
+  headTitle.textContent = h.title(data);
+  headSub.textContent = h.sub(data);
+}
+
+/* ============ markup de uma pergunta ============ */
+function questionHtml(step, idx, isActive) {
+  const qn = idx + 1;
+  const q = typeof step.question === 'function' ? step.question(data) : step.question;
+  let field = '';
+  if (step.type === 'choice') {
+    field = `<div class="radios">` + step.options.map(o =>
+      `<div class="radio-row" data-val="${o}"><span class="circle"></span>${o}</div>`
+    ).join('') + `</div>`;
+  } else if (step.type === 'textarea') {
+    field = `<div class="field"><textarea class="fld" placeholder="${step.placeholder}" rows="4" ${isActive?'':'disabled'}></textarea></div>`;
+  } else if (step.type === 'tel') {
+    field = `<div class="field phone">
+        <div class="ddi-wrap">
+          <button type="button" class="ddi">
+            <span class="flag">${selectedDDI.flag}</span>
+            <span class="code">${selectedDDI.code}</span>
+            <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="ddi-menu" hidden>
+            ${COUNTRIES.map(c => `<button type="button" class="ddi-opt" data-code="${c.code}"><span class="flag">${c.flag}</span>${c.name}<span class="opt-code">${c.code}</span></button>`).join('')}
+          </div>
+        </div>
+        <input class="fld" type="tel" placeholder="${step.placeholder}" autocomplete="tel" ${isActive?'':'disabled'}>
+      </div>
+      ${step.hint ? `<div class="hint">${step.hint}</div>` : ''}`;
+  } else {
+    field = `<div class="field"><input class="fld" type="${step.type}" placeholder="${step.placeholder}" autocomplete="off" ${isActive?'':'disabled'}></div>`;
+  }
+
+  const isChoice = step.type === 'choice';
+  const backHtml = (isActive && cur > 0)
+    ? `<button type="button" class="btn-back">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+         ${I18N[currentLang].back}
+       </button>`
+    : '';
+
+  let actions = '';
+  if (isActive) {
+    if (isChoice) {
+      actions = backHtml ? `<div class="actions">${backHtml}</div>` : '';
+    } else {
+      actions = `<div class="error-msg"></div>
+      <div class="actions">
+        <button class="cta btn-next" ${step.optional ? '' : 'disabled'}>
+          ${step.cta || I18N[currentLang].confirm}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        ${backHtml}
+      </div>`;
+    }
+  }
+
+  return `
+    <p class="qtitle"><span class="qnum">${qn}.</span>${q}</p>
+    ${field}
+    ${actions}
+  `;
+}
+
+/* ============ render: ativa + próxima esmaecida ============ */
+function render() {
+  const step = STEPS[cur];
+  paintProgress(false);
+  paintHead();
+
+  qlist.innerHTML = '';
+
+  const active = document.createElement('div');
+  active.className = 'qitem active';
+  active.innerHTML = questionHtml(step, cur, true);
+  qlist.appendChild(active);
+
+  // cascata (próxima pergunta esmaecida) só no desktop — no mobile aparece uma de cada vez (G4)
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  if (!isMobile && cur > 0 && cur + 1 < STEPS.length) {
+    const nxt = document.createElement('div');
+    nxt.className = 'qitem dim';
+    nxt.innerHTML = questionHtml(STEPS[cur + 1], cur + 1, false);
+    qlist.appendChild(nxt);
+  }
+
+  wire(active, step);
+}
+
+function wire(el, step) {
+  const backBtn = el.querySelector('.btn-back');
+  if (backBtn) backBtn.addEventListener('click', goBack);
+
+  if (step.type === 'choice') {
+    el.querySelectorAll('.radio-row').forEach(r => {
+      r.addEventListener('click', () => {
+        el.querySelectorAll('.radio-row').forEach(x => x.classList.remove('picked'));
+        r.classList.add('picked');
+        data[step.id] = r.dataset.val;
+        setTimeout(next, 300);
+      });
+    });
+    return;
+  }
+  const fld = el.querySelector('.fld');
+  const btn = el.querySelector('.btn-next');
+  const err = el.querySelector('.error-msg');
+  const check = () => {
+    const ok = step.optional || step.validate(fld.value) === true;
+    btn.disabled = !ok && !step.optional;
+  };
+
+  function formatPhone() {
+    // formata enquanto digita: (DD) 9XXXX-XXXX
+    let d = fld.value.replace(/\D/g, '').slice(0, 11);
+    if (d.length > 6)      fld.value = `(${d.slice(0,2)}) ${d.slice(2, d.length > 10 ? 7 : 6)}-${d.slice(d.length > 10 ? 7 : 6)}`;
+    else if (d.length > 2) fld.value = `(${d.slice(0,2)}) ${d.slice(2)}`;
+    else                   fld.value = d;
+  }
+
+  // seletor de país (bandeira + DDI)
+  const ddiWrap = el.querySelector('.ddi-wrap');
+  if (ddiWrap) {
+    const ddiBtn  = ddiWrap.querySelector('.ddi');
+    const ddiMenu = ddiWrap.querySelector('.ddi-menu');
+    const flagEl  = ddiBtn.querySelector('.flag');
+    const codeEl  = ddiBtn.querySelector('.code');
+    ddiBtn.addEventListener('click', (e) => { e.stopPropagation(); ddiMenu.hidden = !ddiMenu.hidden; });
+    ddiWrap.querySelectorAll('.ddi-opt').forEach(opt => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedDDI = COUNTRIES.find(c => c.code === opt.dataset.code) || COUNTRIES[0];
+        flagEl.innerHTML = selectedDDI.flag;
+        codeEl.textContent = selectedDDI.code;
+        ddiMenu.hidden = true;
+        formatPhone();
+        fld.focus();
+      });
+    });
+  }
+
+  if (step.type === 'tel') fld.addEventListener('input', formatPhone);
+
+  // instagram: mantém sempre um único @ no começo
+  if (step.id === 'instagram') {
+    fld.addEventListener('input', () => {
+      const v = fld.value.replace(/@/g, '');
+      fld.value = v ? '@' + v : '';
+    });
+  }
+  fld.addEventListener('input', () => { err.textContent = ''; check(); });
+  fld.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); tryNext(); }
+  });
+  btn.addEventListener('click', tryNext);
+  function tryNext() {
+    if (!step.optional) {
+      const res = step.validate(fld.value);
+      if (res !== true) { err.textContent = res; return; }
+    }
+    data[step.id] = (step.type === 'tel' ? selectedDDI.code + ' ' : '') + fld.value.trim();
+    next();
+  }
+  setTimeout(() => fld.focus(), 80);
+}
+
+function next() {
+  const leaving = qlist.querySelector('.qitem.active');
+  if (leaving) leaving.classList.add('leaving');
+  setTimeout(() => {
+    cur++;
+    if (cur >= STEPS.length) return finish();
+    render();
+  }, 250);
+}
+
+function goBack() {
+  if (cur === 0) return;
+  cur--;
+  render();
+}
+
+// fecha os menus (país do telefone / idioma) ao clicar fora
+document.addEventListener('click', () => {
+  const open = document.querySelector('.ddi-menu:not([hidden])');
+  if (open) open.hidden = true;
+  if (!langMenu.hidden) langMenu.hidden = true;
+});
+
+/* ============ tela final: monta os blocos estáticos a partir do I18N ============ */
+function renderSuccessStatic() {
+  const S = I18N[currentLang].success;
+  const handle = data.instagram || S.checklistFallback;
+
+  document.getElementById('sTag').textContent = S.tag;
+  document.getElementById('sCtaAsk').textContent = S.ctaAsk;
+  document.getElementById('sCtaBtnText').textContent = S.ctaBtn;
+  document.getElementById('sCtaMicro').textContent = S.ctaMicro;
+  document.getElementById('sCtaLink').href =
+    `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(S.waMessage(data.nome ? first(data.nome) : ''))}`;
+  document.getElementById('sChecklistLabel').textContent = S.checklistLabel;
+  document.getElementById('sTimelineLabel').textContent = S.timelineLabel;
+  document.getElementById('sSignoff').innerHTML = S.signoff;
+
+  document.getElementById('sChecklist').innerHTML = S.checklist.map(item => `
+    <li>
+      <span class="s-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+      <span><b>${item.b}</b> <i>${item.i(handle)}</i></span>
+    </li>`).join('');
+
+  document.getElementById('sTimeline').innerHTML = S.timeline.map(t => `
+    <div class="tl-item"><span class="tl-num">${t.n}</span><h4>${t.h}</h4><p>${t.p}</p></div>`).join('');
+}
+
+function finish() {
+  paintProgress(true);
+  sectionHead.style.display = 'none';
+  qlist.innerHTML = '';
+
+  const S = I18N[currentLang].success;
+  document.getElementById('successTitle').textContent = S.title;
+  document.getElementById('successSub').textContent = S.sub(data.instagram);
+  document.getElementById('sContact').innerHTML = S.contact(data.whatsapp || S.contactFallback);
+  renderSuccessStatic();
+
+  successView.classList.add('show');
+  submitLead();
+}
+
+/* ============ envio do lead ============ */
+function submitLead() {
+  const priorityStep = STEPS[STEPS.length - 1];
+  const payload = {
+    nome: data.nome,
+    instagram: data.instagram,
+    email: data.email,
+    whatsapp: data.whatsapp,
+    cargo: data.cargo,
+    funcionarios: data.funcionarios,
+    prioridade: data.prioridade,
+    prioridade_hoje: data.prioridade === priorityStep.options[0],
+    pais: selectedDDI.name,
+    idioma: currentLang,
+    consent_lgpd: true,
+    origem: 'diagnostico',
+  };
+  // fire-and-forget: a tela de sucesso já foi mostrada, uma falha de rede aqui
+  // não deve travar o lead nem exibir erro.
+  fetch('/api/lead-diagnostico', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+
+/* ============ trocador de idioma (mesmas 4 opções do seletor de telefone) ============ */
+function renderLangMenu() {
+  langMenu.innerHTML = LANGUAGES.map(l => `
+    <button type="button" class="lang-opt ${l.code === currentLang ? 'active' : ''}" data-code="${l.code}">
+      <span class="lang-code">${l.short}</span>${l.label}
+    </button>`).join('');
+  langMenu.querySelectorAll('.lang-opt').forEach(opt => {
+    opt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setLanguage(opt.dataset.code);
+      langMenu.hidden = true;
+    });
+  });
+}
+
+function setLanguage(code) {
+  if (!I18N[code]) return;
+  currentLang = code;
+  STEPS = I18N[code].steps;
+  HEADINGS = I18N[code].headings;
+
+  document.documentElement.lang = code;
+  document.title = I18N[code].pageTitle;
+
+  langBtn.setAttribute('aria-label', I18N[code].langAria);
+  document.getElementById('langCode').textContent = LANGUAGES.find(l => l.code === code).btn;
+  document.getElementById('formNameDesktop').textContent = I18N[code].formNameDesktop;
+  document.getElementById('formNameMobile').textContent = I18N[code].formNameMobile;
+
+  renderLangMenu();
+
+  if (successView.classList.contains('show')) {
+    const S = I18N[code].success;
+    document.getElementById('successTitle').textContent = S.title;
+    document.getElementById('successSub').textContent = S.sub(data.instagram);
+    document.getElementById('sContact').innerHTML = S.contact(data.whatsapp || S.contactFallback);
+    renderSuccessStatic();
+  } else {
+    render();
+  }
+}
+
+langBtn.addEventListener('click', (e) => { e.stopPropagation(); langMenu.hidden = !langMenu.hidden; });
+
+setLanguage(currentLang);
+</script>
+</body>
+</html>

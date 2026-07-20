@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "safe-forms",
+  "compatibility_date": "2025-06-01",
+  // Worker que faz proxy do formulário (POST /api/lead-diagnostico → webhook
+  // externo) e serve o HTML como asset estático. Segredos (fora do bundle):
+  //   npx wrangler secret put N8N_WEBHOOK_URL_DIAGNOSTICO
+  //   npx wrangler secret put FORM_TOKEN
+  "main": "worker/index.ts",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  }
+}
