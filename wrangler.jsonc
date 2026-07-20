@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "safe-forms",
+  "name": "forms-safe",
   "compatibility_date": "2025-06-01",
   // Worker que faz proxy do formulário (POST /api/lead-diagnostico → webhook
   // externo) e serve o HTML como asset estático. Segredos (fora do bundle):
